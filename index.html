@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MikeBudget // NEURAL FINANCE SYSTEM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+  /* ════════════════════════════════════════════════════════
+     ROOT VARS
+  ═════════════════════════════════════════════════════════*/
+  :root {
+    --cyan:    #00f5ff;
+    --magenta: #ff0080;
+    --purple:  #9945ff;
+    --gold:    #ffd700;
+    --green:   #00ff99;
+    --red:     #ff3355;
+    --bg:      #010208;
+    --glass:   rgba(1, 8, 22, 0.82);
+    --glass2:  rgba(0, 15, 35, 0.7);
+    --border:  rgba(0, 245, 255, 0.22);
+    --glow:    rgba(0, 245, 255, 0.08);
+    --text:    #c8e8f0;
+    --muted:   rgba(140, 200, 220, 0.5);
+    --font-hud: 'Orbitron', monospace;
+    --font-mono:'Share Tech Mono', monospace;
+    --font-body:'Rajdhani', sans-serif;
+  }
+
+  /* ════════════════════════════════════════════════════════
+     RESET + BASE
+  ═════════════════════════════════════════════════════════*/
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-size: 14px;
+    position: relative;
+  }
+
+  /* ════════════════════════════════════════════════════════
+     BACKGROUND LAYERS
+  ═════════════════════════════════════════════════════════*/
+  #cyber-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background:
+      /* Dark gradient overlay for readability */
+      linear-gradient(160deg, rgba(1,2,12,0.88) 0%, rgba(1,4,18,0.75) 50%, rgba(5,1,18,0.88) 100%),
+      /* Unsplash cyberpunk city — source.unsplash.com serves a random matching photo */
+      url('https://source.unsplash.com/featured/1920x1080/?cyberpunk,neon,city,tokyo,night')
+        center/cover no-repeat fixed;
+  }
+
+  /* Scanline effect */
+  #cyber-bg::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.07) 2px,
+      rgba(0,0,0,0.07) 4px
+    );
+    pointer-events: none;
+    animation: scanroll 12s linear infinite;
+  }
+
+  @keyframes scanroll {
+    from { background-position: 0 0; }
+    to   { background-position: 0 200px; }
+  }
+
+  /* Subtle neon grid */
+  #cyber-bg::after {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,245,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,255,0.03) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+  }
+
+  /* App container above bg */
+  #app {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ════════════════════════════════════════════════════════
+     NEON UTILITIES
+  ═════════════════════════════════════════════════════════*/
+  .glow-cyan    { text-shadow: 0 0 8px var(--cyan), 0 0 24px rgba(0,245,255,0.4); }
+  .glow-magenta { text-shadow: 0 0 8px var(--magenta), 0 0 24px rgba(255,0,128,0.4); }
+  .glow-green   { text-shadow: 0 0 8px var(--green), 0 0 20px rgba(0,255,153,0.4); }
+  .glow-gold    { text-shadow: 0 0 8px var(--gold),  0 0 20px rgba(255,215,0,0.4); }
+  .glow-red     { text-shadow: 0 0 8px var(--red),   0 0 20px rgba(255,51,85,0.4); }
+  .glow-purple  { text-shadow: 0 0 8px var(--purple),0 0 20px rgba(153,69,255,0.4); }
+
+  .neon-border-cyan    { box-shadow: 0 0 0 1px rgba(0,245,255,0.35), 0 0 16px rgba(0,245,255,0.1), inset 0 0 16px rgba(0,245,255,0.03); }
+  .neon-border-magenta { box-shadow: 0 0 0 1px rgba(255,0,128,0.4),  0 0 16px rgba(255,0,128,0.12), inset 0 0 12px rgba(255,0,128,0.04); }
+  .neon-border-green   { box-shadow: 0 0 0 1px rgba(0,255,153,0.35), 0 0 16px rgba(0,255,153,0.1), inset 0 0 12px rgba(0,255,153,0.03); }
+  .neon-border-gold    { box-shadow: 0 0 0 1px rgba(255,215,0,0.35), 0 0 16px rgba(255,215,0,0.1),  inset 0 0 12px rgba(255,215,0,0.03); }
+
+  @keyframes pulse-cyan {
+    0%,100% { box-shadow: 0 0 0 1px rgba(0,245,255,0.35), 0 0 16px rgba(0,245,255,0.1); }
+    50%      { box-shadow: 0 0 0 1px rgba(0,245,255,0.6),  0 0 28px rgba(0,245,255,0.2); }
+  }
+
+  @keyframes flicker {
+    0%,19%,21%,23%,25%,54%,56%,100% { opacity: 1; }
+    20%,24%,55% { opacity: 0.6; }
+  }
+
+  @keyframes neon-run {
+    0%   { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+  }
+
+  /* ════════════════════════════════════════════════════════
+     MODAL
+  ═════════════════════════════════════════════════════════*/
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 200;
+  }
+  .overlay.hidden { display: none; }
+
+  .modal {
+    background: var(--glass);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(0,245,255,0.3);
+    border-radius: 4px;
+    width: 480px; max-width: 96vw;
+    box-shadow:
+      0 0 0 1px rgba(0,245,255,0.15),
+      0 0 40px rgba(0,245,255,0.1),
+      0 32px 80px rgba(0,0,0,0.6);
+    /* Clipped corner effect */
+    clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%);
+    position: relative;
+  }
+  .modal::before {
+    content: '';
+    position: absolute;
+    top: -1px; right: 18px;
+    width: 1px; height: 20px;
+    background: rgba(0,245,255,0.4);
+    transform: rotate(45deg) translateY(-50%);
+    transform-origin: top;
+    pointer-events: none;
+  }
+
+  .modal-head {
+    padding: 18px 24px 14px;
+    border-bottom: 1px solid rgba(0,245,255,0.15);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .modal-head h2 {
+    font-family: var(--font-hud);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--cyan);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    text-shadow: 0 0 10px rgba(0,245,255,0.6);
+  }
+  .modal-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; }
+  .modal-foot { padding: 14px 24px; border-top: 1px solid rgba(0,245,255,0.12); display: flex; justify-content: flex-end; gap: 8px; }
+
+  .form-group  { display: flex; flex-direction: column; gap: 6px; }
+  .form-label  { font-family: var(--font-hud); font-size: 10px; font-weight: 700; color: var(--cyan); text-transform: uppercase; letter-spacing: 0.12em; opacity: 0.8; }
+  .form-input  {
+    background: rgba(0,20,40,0.7);
+    border: 1px solid rgba(0,245,255,0.25);
+    border-radius: 3px;
+    padding: 9px 12px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .form-input:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 12px rgba(0,245,255,0.15), inset 0 0 8px rgba(0,245,255,0.04);
+  }
+  .form-hint { font-size: 11px; color: var(--muted); line-height: 1.5; }
+  .form-hint a { color: var(--cyan); text-decoration: none; }
+
+  /* ════════════════════════════════════════════════════════
+     BUTTONS
+  ═════════════════════════════════════════════════════════*/
+  .btn {
+    font-family: var(--font-hud);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border: none;
+    border-radius: 3px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.18s;
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, rgba(0,245,255,0.2), rgba(0,245,255,0.1));
+    color: var(--cyan);
+    border: 1px solid rgba(0,245,255,0.5);
+    box-shadow: 0 0 12px rgba(0,245,255,0.15);
+  }
+  .btn-primary:hover {
+    background: linear-gradient(135deg, rgba(0,245,255,0.35), rgba(0,245,255,0.2));
+    box-shadow: 0 0 20px rgba(0,245,255,0.3);
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid rgba(140,200,220,0.2);
+  }
+  .btn-ghost:hover { border-color: rgba(0,245,255,0.4); color: var(--cyan); }
+
+  .icon-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 5px 8px;
+    border-radius: 3px;
+    transition: all 0.15s;
+  }
+  .icon-btn:hover { border-color: rgba(0,245,255,0.3); color: var(--cyan); }
+
+  /* ════════════════════════════════════════════════════════
+     HEADER — HUD
+  ═════════════════════════════════════════════════════════*/
+  .header {
+    padding: 10px 24px;
+    border-bottom: 1px solid rgba(0,245,255,0.15);
+    background: rgba(1,4,16,0.9);
+    backdrop-filter: blur(12px);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+    position: relative;
+  }
+  /* bottom neon line */
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cyan), var(--purple), var(--magenta), transparent);
+    opacity: 0.6;
+  }
+
+  .header-left { display: flex; align-items: center; gap: 14px; }
+
+  .logo {
+    font-family: var(--font-hud);
+    font-size: 16px;
+    font-weight: 900;
+    color: var(--cyan);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    animation: flicker 6s infinite;
+    text-shadow: 0 0 10px var(--cyan), 0 0 30px rgba(0,245,255,0.4), 0 0 60px rgba(0,245,255,0.15);
+  }
+  .logo .slash { color: var(--magenta); margin: 0 2px; text-shadow: 0 0 10px var(--magenta); }
+
+  .hud-badge {
+    font-family: var(--font-hud);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 2px;
+    border: 1px solid;
+    clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%);
+  }
+  .hud-badge-cyan    { color: var(--cyan);    border-color: rgba(0,245,255,0.4);  background: rgba(0,245,255,0.07); }
+  .hud-badge-green   { color: var(--green);   border-color: rgba(0,255,153,0.4);  background: rgba(0,255,153,0.07); }
+  .hud-badge-magenta { color: var(--magenta); border-color: rgba(255,0,128,0.4);  background: rgba(255,0,128,0.07); }
+  .hud-badge-gold    { color: var(--gold);    border-color: rgba(255,215,0,0.4);  background: rgba(255,215,0,0.07); }
+  .hud-badge-muted   { color: var(--muted);   border-color: rgba(140,200,220,0.2);background: rgba(140,200,220,0.04); }
+
+  .header-right { display: flex; align-items: center; gap: 10px; }
+
+  .hud-date {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: rgba(0,245,255,0.6);
+    letter-spacing: 0.08em;
+  }
+
+  /* ════════════════════════════════════════════════════════
+     DASHBOARD — HOLOGRAPHIC CARDS
+  ═════════════════════════════════════════════════════════*/
+  .dashboard {
+    padding: 12px 24px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    border-bottom: 1px solid rgba(0,245,255,0.1);
+    flex-shrink: 0;
+    background: rgba(1,4,16,0.65);
+    backdrop-filter: blur(8px);
+  }
+
+  .card {
+    background: var(--glass2);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(0,245,255,0.18);
+    border-radius: 3px;
+    padding: 14px 16px;
+    position: relative;
+    overflow: hidden;
+    transition: box-shadow 0.3s;
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+  }
+  .card:hover {
+    box-shadow: 0 0 24px rgba(0,245,255,0.12);
+    border-color: rgba(0,245,255,0.4);
+  }
+  /* Corner notch decorations */
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 12px; height: 12px;
+    border-top: 1px solid rgba(0,245,255,0.5);
+    border-right: 1px solid rgba(0,245,255,0.5);
+  }
+  .card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 12px; height: 12px;
+    border-bottom: 1px solid rgba(0,245,255,0.3);
+    border-left: 1px solid rgba(0,245,255,0.3);
+  }
+  /* Scan line across card */
+  .card-scan {
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    opacity: 0.3;
+    animation: card-scan 4s ease-in-out infinite;
+  }
+  @keyframes card-scan {
+    0%,100% { top: 0; opacity: 0; }
+    10% { opacity: 0.4; }
+    90% { opacity: 0.4; }
+    50% { top: 100%; }
+  }
+
+  .card-label {
+    font-family: var(--font-hud);
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: rgba(0,245,255,0.55);
+    margin-bottom: 8px;
+  }
+  .card-value {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    color: var(--muted);
+  }
+  .card-value.cyan    { color: var(--cyan);    text-shadow: 0 0 10px rgba(0,245,255,0.5); }
+  .card-value.green   { color: var(--green);   text-shadow: 0 0 10px rgba(0,255,153,0.5); }
+  .card-value.gold    { color: var(--gold);    text-shadow: 0 0 10px rgba(255,215,0,0.5);  }
+  .card-value.red     { color: var(--red);     text-shadow: 0 0 10px rgba(255,51,85,0.5);  }
+  .card-value.magenta { color: var(--magenta); text-shadow: 0 0 10px rgba(255,0,128,0.5);  }
+
+  .card-sub {
+    font-size: 11px;
+    font-family: var(--font-body);
+    color: var(--muted);
+    margin-top: 5px;
+    opacity: 0.75;
+  }
+
+  /* ════════════════════════════════════════════════════════
+     MAIN AREA
+  ═════════════════════════════════════════════════════════*/
+  .main {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    gap: 0;
+  }
+
+  /* ════════════════════════════════════════════════════════
+     CHAT PANE — NEURAL TERMINAL
+  ═════════════════════════════════════════════════════════*/
+  .chat-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 14px 20px;
+    overflow: hidden;
+    border-right: 1px solid rgba(0,245,255,0.12);
+    background: rgba(1,5,18,0.55);
+    backdrop-filter: blur(8px);
+    position: relative;
+  }
+  /* Top accent line */
+  .chat-pane::before {
+    content: '// NEURAL LINK ACTIVE — FINANCE AI';
+    position: absolute;
+    top: 8px; left: 20px;
+    font-family: var(--font-hud);
+    font-size: 8px;
+    letter-spacing: 0.12em;
+    color: rgba(0,245,255,0.25);
+    pointer-events: none;
+  }
+
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 22px 4px 4px 4px;
+  }
+  .chat-messages::-webkit-scrollbar { width: 3px; }
+  .chat-messages::-webkit-scrollbar-track { background: transparent; }
+  .chat-messages::-webkit-scrollbar-thumb { background: rgba(0,245,255,0.2); border-radius: 2px; }
+
+  .msg       { display: flex; flex-direction: column; }
+  .msg.user  { align-items: flex-end; }
+  .msg.assistant { align-items: flex-start; }
+
+  .bubble {
+    max-width: 88%;
+    padding: 10px 14px;
+    font-size: 13.5px;
+    line-height: 1.6;
+    position: relative;
+  }
+
+  .msg.user .bubble {
+    background: linear-gradient(135deg, rgba(255,0,128,0.18), rgba(153,69,255,0.18));
+    border: 1px solid rgba(255,0,128,0.4);
+    border-radius: 2px;
+    color: #f0c0d8;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+    box-shadow: 0 0 16px rgba(255,0,128,0.1), inset 0 0 12px rgba(255,0,128,0.04);
+    font-family: var(--font-body);
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+
+  .msg.assistant .bubble {
+    background: linear-gradient(135deg, rgba(0,245,255,0.06), rgba(0,15,30,0.6));
+    border: 1px solid rgba(0,245,255,0.25);
+    border-radius: 2px;
+    color: #a8d8e8;
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+    box-shadow: 0 0 14px rgba(0,245,255,0.07), inset 0 0 12px rgba(0,245,255,0.03);
+    white-space: pre-wrap;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    line-height: 1.65;
+  }
+  /* Cursor blink on last assistant bubble while streaming */
+  .msg.assistant .bubble.streaming::after {
+    content: '▋';
+    color: var(--cyan);
+    animation: blink 0.7s step-end infinite;
+    text-shadow: 0 0 6px var(--cyan);
+  }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+
+  /* Typing dots */
+  .typing-indicator {
+    display: flex; gap: 6px; padding: 12px 16px;
+    background: rgba(0,10,24,0.6);
+    border: 1px solid rgba(0,245,255,0.2);
+    border-radius: 2px;
+    width: fit-content;
+  }
+  .typing-indicator span {
+    width: 5px; height: 5px;
+    background: var(--cyan);
+    border-radius: 50%;
+    box-shadow: 0 0 6px var(--cyan);
+    animation: tdot 1.2s ease-in-out infinite;
+  }
+  .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes tdot { 0%,80%,100%{opacity:0.2;transform:scale(0.8)} 40%{opacity:1;transform:scale(1.2)} }
+
+  /* Quick action buttons */
+  .quick-btns {
+    display: flex; gap: 6px; flex-wrap: wrap;
+    padding: 8px 0 4px;
+  }
+  .qbtn {
+    font-family: var(--font-hud);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    background: rgba(0,245,255,0.05);
+    border: 1px solid rgba(0,245,255,0.2);
+    border-radius: 2px;
+    color: rgba(0,245,255,0.7);
+    cursor: pointer;
+    transition: all 0.15s;
+    clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 0 100%);
+  }
+  .qbtn:hover {
+    background: rgba(0,245,255,0.12);
+    border-color: var(--cyan);
+    color: var(--cyan);
+    box-shadow: 0 0 10px rgba(0,245,255,0.15);
+  }
+
+  /* Input area */
+  .input-row { display: flex; gap: 8px; padding-top: 8px; }
+  .chat-input {
+    flex: 1;
+    background: rgba(0,10,25,0.8);
+    border: 1px solid rgba(0,245,255,0.22);
+    border-radius: 2px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .chat-input::placeholder { color: rgba(0,245,255,0.25); font-size: 13px; }
+  .chat-input:focus {
+    border-color: rgba(0,245,255,0.6);
+    box-shadow: 0 0 14px rgba(0,245,255,0.1), inset 0 0 8px rgba(0,245,255,0.03);
+  }
+
+  .send-btn {
+    font-family: var(--font-hud);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, rgba(0,245,255,0.2), rgba(153,69,255,0.15));
+    border: 1px solid rgba(0,245,255,0.45);
+    border-radius: 2px;
+    color: var(--cyan);
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: all 0.18s;
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+    box-shadow: 0 0 12px rgba(0,245,255,0.15);
+    position: relative;
+    overflow: hidden;
+  }
+  .send-btn::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(0,245,255,0.08), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.3s;
+  }
+  .send-btn:hover::before { transform: translateX(100%); }
+  .send-btn:hover { box-shadow: 0 0 24px rgba(0,245,255,0.3); border-color: var(--cyan); }
+  .send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  /* ════════════════════════════════════════════════════════
+     SIDEBAR — DATA PANEL
+  ═════════════════════════════════════════════════════════*/
+  .sidebar {
+    width: 268px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: rgba(1,4,16,0.75);
+    backdrop-filter: blur(12px);
+    border-left: 1px solid rgba(0,245,255,0.12);
+  }
+
+  .sidebar-section {
+    padding: 12px 14px 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar-section.grow { flex: 1; overflow: hidden; }
+
+  .sidebar-head {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
+  }
+  .sidebar-label {
+    font-family: var(--font-hud);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(0,245,255,0.5);
+  }
+  .sidebar-month {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: rgba(0,245,255,0.7);
+    letter-spacing: 0.06em;
+  }
+
+  /* Bills scroll area */
+  .bills-scroll {
+    flex: 1; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 4px;
+    padding-bottom: 6px;
+  }
+  .bills-scroll::-webkit-scrollbar { width: 2px; }
+  .bills-scroll::-webkit-scrollbar-thumb { background: rgba(0,245,255,0.15); }
+
+  /* Bill row (view) */
+  .bill-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 6px 10px;
+    background: rgba(0,10,22,0.6);
+    border: 1px solid rgba(0,245,255,0.1);
+    border-radius: 2px;
+    clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%);
+    transition: border-color 0.2s;
+  }
+  .bill-row:hover { border-color: rgba(0,245,255,0.25); }
+  .bill-row.paid   { opacity: 0.3; filter: saturate(0.3); }
+  .bill-row.soon   { border-color: rgba(255,215,0,0.35); background: rgba(255,215,0,0.04); }
+  .bill-row.urgent { border-color: rgba(255,51,85,0.45); background: rgba(255,51,85,0.05); }
+
+  .bill-name { font-size: 11.5px; font-family: var(--font-body); font-weight: 600; }
+  .bill-date { font-size: 9.5px; color: var(--muted); margin-top: 1px; font-family: var(--font-mono); }
+  .bill-amt  { font-family: var(--font-mono); font-size: 12px; font-weight: 400; color: rgba(255,215,0,0.85); }
+
+  /* ── EDIT MODE ─────────────────────────────── */
+  .bill-edit-row {
+    display: flex; align-items: center; gap: 4px;
+    padding: 5px 7px;
+    background: rgba(0,245,255,0.04);
+    border: 1px solid rgba(0,245,255,0.3);
+    border-radius: 2px;
+    margin-bottom: 4px;
+  }
+  .edit-input {
+    background: rgba(0,15,30,0.8);
+    border: 1px solid rgba(0,245,255,0.2);
+    border-radius: 2px;
+    padding: 4px 6px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    outline: none;
+  }
+  .edit-input:focus { border-color: var(--cyan); }
+  .edit-name { flex: 1; min-width: 0; }
+  .edit-amt  { width: 62px; }
+  .edit-day  { width: 36px; text-align: center; }
+  .del-btn   {
+    background: none; border: none;
+    color: rgba(255,51,85,0.5); cursor: pointer; font-size: 13px;
+    padding: 2px 4px; border-radius: 2px; flex-shrink: 0;
+  }
+  .del-btn:hover { color: var(--red); background: rgba(255,51,85,0.1); }
+
+  .add-row-btn {
+    width: 100%;
+    background: rgba(0,245,255,0.04);
+    border: 1px dashed rgba(0,245,255,0.2);
+    border-radius: 2px;
+    padding: 7px;
+    color: rgba(0,245,255,0.45);
+    font-family: var(--font-hud);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    margin: 4px 0 6px;
+    transition: all 0.15s;
+  }
+  .add-row-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+  .edit-actions { display: flex; gap: 6px; padding: 0 0 8px; }
+  .edit-actions .btn { flex: 1; font-size: 9px; padding: 7px; }
+
+  /* Sidebar total */
+  .sidebar-total {
+    padding: 8px 14px 10px;
+    border-top: 1px solid rgba(0,245,255,0.1);
+    display: flex; justify-content: space-between;
+    font-family: var(--font-hud);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .sidebar-total .label { color: rgba(0,245,255,0.5); }
+  .sidebar-total .value { color: var(--gold); text-shadow: 0 0 8px rgba(255,215,0,0.4); font-family: var(--font-mono); font-size: 14px; }
+
+  .sidebar-divider { border: none; border-top: 1px solid rgba(0,245,255,0.1); margin: 0; flex-shrink: 0; }
+
+  /* Income settings */
+  .income-section { flex-shrink: 0; padding: 0 14px 14px; }
+  .income-toggle {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0 0;
+    font-family: var(--font-hud);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(0,245,255,0.4);
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.15s;
+  }
+  .income-toggle:hover { color: rgba(0,245,255,0.8); }
+
+  .income-panel { display: flex; flex-direction: column; gap: 8px; padding-top: 10px; }
+  .income-panel.hidden { display: none; }
+
+  .income-field { display: flex; flex-direction: column; gap: 4px; }
+  .income-field label {
+    font-family: var(--font-hud);
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: rgba(0,245,255,0.45);
+  }
+
+  /* ════════════════════════════════════════════════════════
+     MISC
+  ═════════════════════════════════════════════════════════*/
+  select.form-input option { background: #010a18; color: var(--text); }
+  select.edit-input option { background: #010a18; color: var(--text); }
+
+  /* Corner accent decorations for the whole layout */
+  .corner-tl, .corner-br {
+    position: fixed; z-index: 2; pointer-events: none;
+    width: 60px; height: 60px; opacity: 0.4;
+  }
+  .corner-tl { top: 0; left: 0;
+    border-top: 2px solid var(--cyan); border-left: 2px solid var(--cyan); }
+  .corner-br { bottom: 0; right: 0;
+    border-bottom: 2px solid var(--magenta); border-right: 2px solid var(--magenta); }
+  </style>
+</head>
+<body>
+
+<!-- BG -->
+<div id="cyber-bg"></div>
+<!-- Corner accents -->
+<div class="corner-tl"></div>
+<div class="corner-br"></div>
+
+<!-- ════════════════════════════════════════════════════
+     SETTINGS MODAL
+═══════════════════════════════════════════════════════ -->
+<div id="settingsOverlay" class="overlay hidden">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>⚙ System Configuration</h2>
+      <button class="icon-btn" onclick="closeSettings()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <div class="form-label">Anthropic API Key</div>
+        <input type="password" id="apiKeyInput" class="form-input" placeholder="sk-ant-api03-..." autocomplete="off" />
+        <p class="form-hint">Stored locally in browser. Never transmitted except to Anthropic's API.<br>
+          <a href="https://console.anthropic.com/settings/keys" target="_blank">Obtain access key → console.anthropic.com</a>
+        </p>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Neural Model</div>
+        <select id="modelSelect" class="form-input">
+          <option value="claude-opus-4-6">Claude Opus 4.6 — Maximum intelligence (recommended)</option>
+          <option value="claude-haiku-4-5">Claude Haiku 4.5 — High-speed, low-cost</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeSettings()">ABORT</button>
+      <button class="btn btn-primary" onclick="saveSettings()">COMMIT</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     APP
+═══════════════════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <span class="logo">Mike<span class="slash">//</span>Budget</span>
+      <span class="hud-badge hud-badge-cyan">Neural Finance v2.0</span>
+      <span id="apiStatus" class="hud-badge hud-badge-muted">No API Key</span>
+    </div>
+    <div class="header-right">
+      <span id="paycheckTag" class="hud-badge hud-badge-green" style="display:none"></span>
+      <span id="headerDate" class="hud-date"></span>
+      <button class="icon-btn" onclick="openSettings()" title="Settings">⚙</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="dashboard">
+    <div class="card">
+      <div class="card-scan"></div>
+      <div class="card-label">▸ Checking Balance</div>
+      <div class="card-value" id="card-balance">——</div>
+      <div class="card-sub" id="card-balance-sub">Awaiting input</div>
+    </div>
+    <div class="card">
+      <div class="card-scan"></div>
+      <div class="card-label">▸ Upcoming Bills</div>
+      <div class="card-value" id="card-bills">——</div>
+      <div class="card-sub" id="card-bills-sub">Until next paycheck</div>
+    </div>
+    <div class="card">
+      <div class="card-scan"></div>
+      <div class="card-label">▸ Safe to Spend</div>
+      <div class="card-value" id="card-safe">——</div>
+      <div class="card-sub">After obligations + buffer</div>
+    </div>
+    <div class="card">
+      <div class="card-scan"></div>
+      <div class="card-label">▸ Risk Level</div>
+      <div class="card-value" id="card-risk">——</div>
+      <div class="card-sub" id="card-risk-sub">—</div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- CHAT TERMINAL -->
+    <div class="chat-pane">
+      <div class="chat-messages" id="chatMessages"></div>
+      <div class="quick-btns">
+        <button class="qbtn" onclick="quick('What bills are due before my next paycheck?')">&#x2234; Upcoming Bills</button>
+        <button class="qbtn" onclick="quick('How much should I save right now?')">&#x25B2; Savings Target</button>
+        <button class="qbtn" onclick="quick('When is my next paycheck?')">&#x25C6; Pay Schedule</button>
+        <button class="qbtn" onclick="quick('What is my projected cushion at end of month?')">&#x2248; Month Outlook</button>
+      </div>
+      <div class="input-row">
+        <input type="text" id="chatInput" class="chat-input"
+          placeholder='> Enter query — e.g. "Checking: $1,200. Surplus on April 5?"' />
+        <button id="sendBtn" class="send-btn" onclick="handleSend()">TRANSMIT</button>
+      </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+
+      <div class="sidebar-section grow" style="display:flex;flex-direction:column;overflow:hidden;">
+        <div class="sidebar-head">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="sidebar-label">Monthly Bills</span>
+            <span class="sidebar-month" id="sidebarMonth"></span>
+          </div>
+          <button id="editBillsBtn" class="btn btn-ghost" style="font-size:9px;padding:4px 10px;letter-spacing:0.1em;" onclick="toggleEditBills()">EDIT</button>
+        </div>
+
+        <!-- View -->
+        <div id="billsView" class="bills-scroll"></div>
+
+        <!-- Edit -->
+        <div id="billsEdit" class="bills-scroll hidden"></div>
+        <div id="editFooter" class="hidden">
+          <button class="add-row-btn" onclick="addBillRow()">+ ADD EXPENSE LINE</button>
+          <div class="edit-actions">
+            <button class="btn btn-primary" onclick="saveBillsEdit()">SAVE</button>
+            <button class="btn btn-ghost"   onclick="cancelBillsEdit()">REVERT</button>
+            <button class="btn btn-ghost" style="color:var(--magenta);border-color:var(--magenta)" onclick="if(confirm('Reset all expenses to defaults?'))resetBillsToDefault()">↺ DEFAULTS</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-total">
+        <span class="label">Monthly Total</span>
+        <span class="value" id="billsTotal">—</span>
+      </div>
+
+      <hr class="sidebar-divider">
+
+      <!-- Income settings -->
+      <div class="income-section">
+        <div class="income-toggle" onclick="toggleIncomePanel()">
+          <span>Income &amp; Config</span>
+          <span id="incomeArrow">▸</span>
+        </div>
+        <div id="incomePanel" class="income-panel hidden">
+          <div class="income-field">
+            <label>Paycheck Amount ($)</label>
+            <input type="number" id="paycheckAmt" class="edit-input" step="0.01" />
+          </div>
+          <div class="income-field">
+            <label>Frequency (days)</label>
+            <input type="number" id="paycheckFreq" class="edit-input" />
+          </div>
+          <div class="income-field">
+            <label>Safety Buffer ($)</label>
+            <input type="number" id="safetyBuf" class="edit-input" />
+          </div>
+          <div class="income-field">
+            <label>Anchor Paycheck Date</label>
+            <input type="date" id="anchorDate" class="edit-input" />
+          </div>
+          <button class="btn btn-primary" id="incomeSaveBtn" onclick="saveIncome()" style="font-size:9px;padding:8px;margin-top:2px;">COMMIT INCOME SETTINGS</button>
+        </div>
+      </div>
+
+    </div><!-- /sidebar -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+'use strict';
+
+/* ════════════════════════════════════════════════════════
+   DEFAULTS / DATA
+═════════════════════════════════════════════════════════*/
+const DEFAULT_BILLS = [
+  { name:'Spotify',           amount:11.00,   day:3  },
+  { name:'Rent',              amount:1477.00, day:6  },
+  { name:'Max',               amount:17.99,   day:8  },
+  { name:'Loans',             amount:330.00,  day:10 },
+  { name:'Spectrum/Internet', amount:70.00,   day:12 },
+  { name:'Acorns',            amount:3.00,    day:13 },
+  { name:'Con Edison',        amount:51.73,   day:13 },
+  { name:'YMCA',              amount:119.00,  day:17 },
+  { name:'Hulu',              amount:15.99,   day:18 },
+  { name:'New York Times',    amount:4.00,    day:20 },
+  { name:'Netflix',           amount:26.00,   day:29 },
+  { name:'Canva',             amount:12.99,   day:29 },
+  { name:'Food',              amount:1240.00, day:29 },
+  { name:'MTA',               amount:82.00,   day:29 },
+  { name:'Credit Card',       amount:183.00,  day:29 },
+  { name:'Haircut',           amount:70.00,   day:29 },
+];
+
+const CONFIG_VERSION = 3; // bump this to force-reset bills to defaults on next load
+
+const DEFAULT_CONFIG = {
+  configVersion:     CONFIG_VERSION,
+  paycheckAmount:    3213.09,
+  paycheckFrequency: 14,
+  paycheckAnchor:   '2025-07-12',
+  safetyBuffer:     200,
+  bills:            DEFAULT_BILLS,
+  apiKey:           '',
+  model:            'claude-opus-4-6',
+};
+
+/* ════════════════════════════════════════════════════════
+   CONFIG / PERSISTENCE
+═════════════════════════════════════════════════════════*/
+function getConfig() {
+  try {
+    const raw = localStorage.getItem('mikebudget_config');
+    if (!raw) return { ...DEFAULT_CONFIG, bills: DEFAULT_BILLS.map(b=>({...b})) };
+    const c = JSON.parse(raw);
+    // If config version is stale, reset bills to defaults (preserve apiKey + model)
+    if (!c.configVersion || c.configVersion < CONFIG_VERSION) {
+      const fresh = { ...DEFAULT_CONFIG, bills: DEFAULT_BILLS.map(b=>({...b})), apiKey: c.apiKey||'', model: c.model||DEFAULT_CONFIG.model };
+      saveConfig(fresh);
+      return fresh;
+    }
+    return { ...DEFAULT_CONFIG, ...c, bills: c.bills && c.bills.length ? c.bills : DEFAULT_BILLS.map(b=>({...b})) };
+  } catch { return { ...DEFAULT_CONFIG, bills: DEFAULT_BILLS.map(b=>({...b})) }; }
+}
+function saveConfig(c) { localStorage.setItem('mikebudget_config', JSON.stringify({ ...c, configVersion: CONFIG_VERSION })); }
+function resetBillsToDefault() {
+  const cfg = getConfig(); cfg.bills = DEFAULT_BILLS.map(b=>({...b})); saveConfig(cfg);
+  exitEdit(); renderBillsView(); updateDashboard();
+}
+
+/* ════════════════════════════════════════════════════════
+   DATE UTILS
+═════════════════════════════════════════════════════════*/
+const MF = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function ld(d) {
+  if (d instanceof Date) return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  if (typeof d==='string') { const p=d.split('-').map(Number); return new Date(p[0],p[1]-1,p[2]); }
+  return new Date(d);
+}
+function addDays(d,n) { const r=new Date(ld(d)); r.setDate(r.getDate()+n); return r; }
+function daysBetween(d1,d2) { return Math.round((ld(d2)-ld(d1))/86400000); }
+function fmt(d)  { d=ld(d); return `${MF[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`; }
+function fmtS(d) { d=ld(d); return `${MS[d.getMonth()]} ${d.getDate()}`; }
+function fmtMoney(n) {
+  const s=Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  return (n<0?'-':'')+'$'+s;
+}
+
+/* ════════════════════════════════════════════════════════
+   PAYCHECK ENGINE
+═════════════════════════════════════════════════════════*/
+function anchor()   { return ld(getConfig().paycheckAnchor); }
+function interval() { return getConfig().paycheckFrequency; }
+
+function nextPaycheck(date) {
+  date=ld(date);
+  const diff=Math.round((date-anchor())/86400000);
+  const mod=((diff%interval())+interval())%interval();
+  return addDays(date,mod===0?0:interval()-mod);
+}
+function prevPaycheck(date) {
+  date=ld(date);
+  const diff=Math.round((date-anchor())/86400000);
+  const mod=((diff%interval())+interval())%interval();
+  return addDays(date,-mod);
+}
+function paychecksInRange(start,end) {
+  start=ld(start); end=ld(end);
+  const result=[]; let cur=nextPaycheck(start);
+  while(cur<=end){ result.push(new Date(cur)); cur=addDays(cur,interval()); }
+  return result;
+}
+
+/* ════════════════════════════════════════════════════════
+   BILLS ENGINE
+═════════════════════════════════════════════════════════*/
+function billsInRange(start,end) {
+  const bills=getConfig().bills;
+  start=ld(start); end=ld(end);
+  const result=[];
+  let m=new Date(start.getFullYear(),start.getMonth(),1);
+  const mEnd=new Date(end.getFullYear(),end.getMonth(),1);
+  while(m<=mEnd){
+    for(const b of bills){
+      const d=new Date(m.getFullYear(),m.getMonth(),b.day);
+      if(d>=start&&d<=end) result.push({...b,date:new Date(d)});
+    }
+    m=new Date(m.getFullYear(),m.getMonth()+1,1);
+  }
+  return result.sort((a,b)=>a.date-b.date);
+}
+
+/* ════════════════════════════════════════════════════════
+   FINANCE CALCULATOR
+═════════════════════════════════════════════════════════*/
+function analyze(balance, balDate, queryDate) {
+  const cfg=getConfig();
+  balDate=ld(balDate||new Date()); queryDate=ld(queryDate||balDate);
+  const incoming=paychecksInRange(addDays(balDate,1),queryDate);
+  const totalDep=incoming.length*cfg.paycheckAmount;
+  const billsBefore=billsInRange(balDate,queryDate);
+  const totalBB=billsBefore.reduce((s,b)=>s+b.amount,0);
+  const projected=balance+totalDep-totalBB;
+  const nextPC=nextPaycheck(addDays(queryDate,1));
+  const billsAfter=billsInRange(addDays(queryDate,1),addDays(nextPC,-1));
+  const totalBA=billsAfter.reduce((s,b)=>s+b.amount,0);
+  const safe=projected-totalBA-cfg.safetyBuffer;
+  let sug=0;
+  if(safe>800) sug=Math.min(Math.round(safe*.30),600);
+  else if(safe>400) sug=Math.min(Math.round(safe*.20),300);
+  else if(safe>200) sug=Math.min(Math.round(safe*.10),100);
+  let risk,rc;
+  if(safe>=500){risk='LOW';rc='green';}
+  else if(safe>=150){risk='MEDIUM';rc='gold';}
+  else{risk='HIGH';rc='red';}
+  return { balDate,queryDate,balance,incoming,totalDep,billsBefore,totalBB,
+    projected,nextPC,lastPC:prevPaycheck(balDate),billsAfter,totalBA,safe,sug,risk,rc };
+}
+
+/* ════════════════════════════════════════════════════════
+   SYSTEM PROMPT
+═════════════════════════════════════════════════════════*/
+function buildSystemPrompt() {
+  const cfg=getConfig();
+  const today=new Date();
+  const np=nextPaycheck(addDays(today,1));
+  const lp=prevPaycheck(today);
+  const np2=nextPaycheck(addDays(np,1));
+  const total=cfg.bills.reduce((s,b)=>s+b.amount,0);
+
+  let sys=`You are MikeBudget, a personal finance assistant and smart money coach. Today is ${fmt(today)}.
+
+== PAYCHECK SCHEDULE ==
+Amount: ${fmtMoney(cfg.paycheckAmount)} biweekly
+Last paycheck: ${fmt(lp)}
+Next paycheck: ${fmt(np)} (${daysBetween(today,np)} days away)
+Following: ${fmt(np2)}
+
+== MONTHLY BILLS (${fmtMoney(total)}/month) ==
+${cfg.bills.slice().sort((a,b)=>a.day-b.day).map(b=>`  ${b.name}: ${fmtMoney(b.amount)} — due ${b.day}th`).join('\n')}
+
+== CALCULATION RULE ==
+safe_surplus = balance + incoming_paychecks - bills_now_through_query_date - bills_after_query_until_next_paycheck - $${cfg.safetyBuffer} buffer`;
+
+  if(sessionBalance!==null){
+    const r=analyze(sessionBalance,sessionBalanceDate||today,today);
+    sys+=`
+
+== LIVE SNAPSHOT (balance: ${fmtMoney(sessionBalance)} as of ${fmt(sessionBalanceDate||today)}) ==
+Projected balance today: ${fmtMoney(r.projected)}
+Protected for upcoming bills (→${fmt(r.nextPC)}): ${fmtMoney(r.totalBA)}
+${r.billsAfter.map(b=>`  • ${b.name}: ${fmtMoney(b.amount)} — ${fmtS(b.date)}`).join('\n')}
+Safe-to-spend surplus: ${fmtMoney(Math.max(r.safe,0))}
+Risk: ${r.risk}${r.sug>0?`\nSuggested savings: ${fmtMoney(r.sug)}`:''}`;
+  }
+
+  sys+=`
+
+== BEHAVIOR ==
+- Be conversational, direct, honest, and warm — like a trusted advisor
+- Always give concrete dollar amounts — no vague answers
+- Protect bill money first; warn clearly when finances are tight
+- Suggest savings when there's real surplus
+- Update your numbers whenever the user mentions a new balance
+- You can also discuss anything else the user wants — general life, advice, other topics
+- Format money as $X,XXX.XX
+- Keep responses clear and reasonably concise`;
+  return sys;
+}
+
+/* ════════════════════════════════════════════════════════
+   CLAUDE API — STREAMING
+═════════════════════════════════════════════════════════*/
+async function callClaude(userMsg, onChunk) {
+  const cfg=getConfig();
+  if(!cfg.apiKey) throw new Error('NO_KEY');
+  const messages=[...conversationHistory.slice(-20),{role:'user',content:userMsg}];
+  const res=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{
+      'x-api-key': cfg.apiKey,
+      'anthropic-version': '2023-06-01',
+      'content-type': 'application/json',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model: cfg.model, max_tokens:1024, stream:true,
+      system: buildSystemPrompt(), messages,
+    }),
+  });
+  if(!res.ok){
+    const err=await res.json().catch(()=>({}));
+    if(res.status===401) throw new Error('BAD_KEY');
+    throw new Error(err?.error?.message||`HTTP ${res.status}`);
+  }
+  const reader=res.body.getReader();
+  const dec=new TextDecoder();
+  let buf='', full='';
+  while(true){
+    const {done,value}=await reader.read();
+    if(done) break;
+    buf+=dec.decode(value,{stream:true});
+    const lines=buf.split('\n'); buf=lines.pop();
+    for(const line of lines){
+      if(!line.startsWith('data: ')) continue;
+      const d=line.slice(6).trim();
+      if(d==='[DONE]') continue;
+      try{
+        const ev=JSON.parse(d);
+        if(ev.type==='content_block_delta'&&ev.delta?.text){
+          full+=ev.delta.text; onChunk(full);
+        }
+      }catch{}
+    }
+  }
+  return full;
+}
+
+/* ════════════════════════════════════════════════════════
+   NLP HELPERS
+═════════════════════════════════════════════════════════*/
+const MONTH_MAP={january:0,jan:0,february:1,feb:1,march:2,mar:2,april:3,apr:3,may:4,june:5,jun:5,july:6,jul:6,august:7,aug:7,september:8,sep:8,sept:8,october:9,oct:9,november:10,nov:10,december:11,dec:11};
+
+function extractBalance(text) {
+  const lower=text.toLowerCase();
+  const hasBal=/\bhave|balance|checking|account|bank|sitting|got\b/i.test(lower);
+  const rx=/\$[\d,]+(?:\.\d{1,2})?|\b[\d,]{3,}(?:\.\d{2})?\b/g;
+  const amounts=[...text.matchAll(rx)].map(m=>parseFloat(m[0].replace(/[$,]/g,''))).filter(v=>v>0&&v<200000);
+  if(!amounts.length) return null;
+  if(hasBal) return amounts[0];
+  if(amounts.length>=2) return amounts[0];
+  if(amounts[0]>400&&!/spend|afford|buy/i.test(lower)) return amounts[0];
+  return null;
+}
+
+/* ════════════════════════════════════════════════════════
+   SESSION STATE
+═════════════════════════════════════════════════════════*/
+let sessionBalance=null, sessionBalanceDate=null;
+let conversationHistory=[];
+let isStreaming=false;
+
+/* ════════════════════════════════════════════════════════
+   UI: DASHBOARD
+═════════════════════════════════════════════════════════*/
+function updateDashboard() {
+  if(sessionBalance===null) return;
+  const today=ld(new Date());
+  const r=analyze(sessionBalance,sessionBalanceDate||today,today);
+  const upcoming=billsInRange(today,addDays(r.nextPC,-1));
+  const upTotal=upcoming.reduce((s,b)=>s+b.amount,0);
+
+  const b=document.getElementById('card-balance');
+  b.textContent=fmtMoney(sessionBalance); b.className='card-value cyan';
+  document.getElementById('card-balance-sub').textContent=`As of ${fmt(sessionBalanceDate||today)}`;
+
+  const bi=document.getElementById('card-bills');
+  bi.textContent=fmtMoney(upTotal); bi.className='card-value gold';
+  document.getElementById('card-bills-sub').textContent=`${upcoming.length} lines until ${fmtS(r.nextPC)}`;
+
+  const safe=document.getElementById('card-safe');
+  safe.textContent=fmtMoney(Math.max(r.safe,0));
+  safe.className=`card-value ${r.rc==='green'?'green':r.rc==='gold'?'gold':'magenta'}`;
+
+  const rk=document.getElementById('card-risk');
+  rk.textContent=r.risk;
+  rk.className=`card-value ${r.rc==='green'?'green':r.rc==='gold'?'gold':'red'}`;
+  document.getElementById('card-risk-sub').textContent=`Next paycheck ${fmtS(r.nextPC)}`;
+}
+
+/* ════════════════════════════════════════════════════════
+   UI: BILLS SIDEBAR
+═════════════════════════════════════════════════════════*/
+let editMode=false, editDraft=[];
+
+function renderBillsView() {
+  const today=ld(new Date());
+  const cfg=getConfig();
+  const list=document.getElementById('billsView');
+  list.innerHTML='';
+  cfg.bills.forEach(bill=>{
+    const d=new Date(today.getFullYear(),today.getMonth(),bill.day);
+    const passed=d<today, dtu=daysBetween(today,d);
+    const cls=passed?'paid':dtu<=2?'urgent':dtu<=5?'soon':'';
+    const row=document.createElement('div');
+    row.className=`bill-row ${cls}`;
+    row.innerHTML=`<div><div class="bill-name">${bill.name}</div><div class="bill-date">${passed?'✓ cleared':`Due ${fmtS(d)}`}</div></div><div class="bill-amt">${fmtMoney(bill.amount)}</div>`;
+    list.appendChild(row);
+  });
+  const total=cfg.bills.reduce((s,b)=>s+b.amount,0);
+  document.getElementById('billsTotal').textContent=fmtMoney(total);
+  document.getElementById('sidebarMonth').textContent=MF[today.getMonth()].toUpperCase();
+}
+
+function toggleEditBills() {
+  if(editMode){ cancelBillsEdit(); return; }
+  editMode=true; editDraft=getConfig().bills.map(b=>({...b}));
+  document.getElementById('editBillsBtn').textContent='CANCEL';
+  document.getElementById('billsView').classList.add('hidden');
+  document.getElementById('billsEdit').classList.remove('hidden');
+  document.getElementById('editFooter').classList.remove('hidden');
+  renderEditRows();
+}
+
+function renderEditRows() {
+  const c=document.getElementById('billsEdit'); c.innerHTML='';
+  editDraft.forEach((b,i)=>{
+    const row=document.createElement('div');
+    row.className='bill-edit-row';
+    row.innerHTML=`<input class="edit-input edit-name" type="text"   value="${b.name}"   placeholder="Name"  oninput="editDraft[${i}].name=this.value"/>
+      <input class="edit-input edit-amt"  type="number" value="${b.amount}" placeholder="Amt"   oninput="editDraft[${i}].amount=+this.value" step="0.01" min="0"/>
+      <input class="edit-input edit-day"  type="number" value="${b.day}"    placeholder="Day"   oninput="editDraft[${i}].day=+this.value" min="1" max="31"/>
+      <button class="del-btn" onclick="deleteDraft(${i})">✕</button>`;
+    c.appendChild(row);
+  });
+}
+
+function deleteDraft(i) { editDraft.splice(i,1); renderEditRows(); }
+
+function addBillRow() {
+  editDraft.push({name:'',amount:0,day:1}); renderEditRows();
+  const rows=document.getElementById('billsEdit').querySelectorAll('.bill-edit-row');
+  if(rows.length) rows[rows.length-1].querySelector('input').focus();
+}
+
+function saveBillsEdit() {
+  const valid=editDraft.filter(b=>b.name.trim()&&b.amount>0&&b.day>=1&&b.day<=31);
+  const cfg=getConfig(); cfg.bills=valid; saveConfig(cfg);
+  exitEdit(); renderBillsView(); updateDashboard();
+}
+function cancelBillsEdit() { exitEdit(); }
+function exitEdit() {
+  editMode=false; editDraft=[];
+  document.getElementById('editBillsBtn').textContent='EDIT';
+  document.getElementById('billsView').classList.remove('hidden');
+  document.getElementById('billsEdit').classList.add('hidden');
+  document.getElementById('editFooter').classList.add('hidden');
+  document.getElementById('billsEdit').innerHTML='';
+}
+
+/* ════════════════════════════════════════════════════════
+   UI: INCOME SETTINGS
+═════════════════════════════════════════════════════════*/
+let incomeOpen=false;
+function toggleIncomePanel() {
+  incomeOpen=!incomeOpen;
+  document.getElementById('incomePanel').classList.toggle('hidden',!incomeOpen);
+  document.getElementById('incomeArrow').textContent=incomeOpen?'▾':'▸';
+  if(incomeOpen){
+    const cfg=getConfig();
+    document.getElementById('paycheckAmt').value=cfg.paycheckAmount;
+    document.getElementById('paycheckFreq').value=cfg.paycheckFrequency;
+    document.getElementById('safetyBuf').value=cfg.safetyBuffer;
+    document.getElementById('anchorDate').value=cfg.paycheckAnchor;
+  }
+}
+function saveIncome() {
+  const cfg=getConfig();
+  const a=parseFloat(document.getElementById('paycheckAmt').value);
+  const f=parseInt(document.getElementById('paycheckFreq').value);
+  const b=parseFloat(document.getElementById('safetyBuf').value);
+  const d=document.getElementById('anchorDate').value;
+  if(a>0) cfg.paycheckAmount=a;
+  if(f>0) cfg.paycheckFrequency=f;
+  if(b>=0) cfg.safetyBuffer=b;
+  if(d) cfg.paycheckAnchor=d;
+  saveConfig(cfg); renderBillsView(); updateDashboard();
+  const btn=document.getElementById('incomeSaveBtn');
+  btn.textContent='✓ COMMITTED'; setTimeout(()=>btn.textContent='COMMIT INCOME SETTINGS',1800);
+}
+
+/* ════════════════════════════════════════════════════════
+   UI: SETTINGS MODAL
+═════════════════════════════════════════════════════════*/
+function openSettings() {
+  const cfg=getConfig();
+  document.getElementById('apiKeyInput').value=cfg.apiKey;
+  document.getElementById('modelSelect').value=cfg.model;
+  document.getElementById('settingsOverlay').classList.remove('hidden');
+}
+function closeSettings() { document.getElementById('settingsOverlay').classList.add('hidden'); }
+function saveSettings() {
+  const cfg=getConfig();
+  cfg.apiKey=document.getElementById('apiKeyInput').value.trim();
+  cfg.model=document.getElementById('modelSelect').value;
+  saveConfig(cfg); closeSettings(); updateApiStatus();
+}
+function updateApiStatus() {
+  const cfg=getConfig();
+  const el=document.getElementById('apiStatus');
+  el.textContent=cfg.apiKey?'● NEURAL LINK ACTIVE':'No API Key';
+  el.className=`hud-badge ${cfg.apiKey?'hud-badge-green':'hud-badge-muted'}`;
+}
+
+/* ════════════════════════════════════════════════════════
+   UI: CHAT
+═════════════════════════════════════════════════════════*/
+function addMsg(text,role) {
+  const wrap=document.getElementById('chatMessages');
+  const div=document.createElement('div');
+  div.className=`msg ${role}`;
+  const bubble=document.createElement('div');
+  bubble.className='bubble';
+  bubble.textContent=text;
+  div.appendChild(bubble); wrap.appendChild(div);
+  wrap.scrollTop=wrap.scrollHeight;
+  return bubble;
+}
+
+function showTyping() {
+  const wrap=document.getElementById('chatMessages');
+  const div=document.createElement('div');
+  div.className='msg assistant'; div.id='typingEl';
+  div.innerHTML='<div class="typing-indicator"><span></span><span></span><span></span></div>';
+  wrap.appendChild(div); wrap.scrollTop=wrap.scrollHeight;
+}
+function removeTyping() { const el=document.getElementById('typingEl'); if(el) el.remove(); }
+function setEnabled(on) {
+  document.getElementById('chatInput').disabled=!on;
+  document.getElementById('sendBtn').disabled=!on;
+  isStreaming=!on;
+}
+
+async function handleSend() {
+  if(isStreaming) return;
+  const input=document.getElementById('chatInput');
+  const text=input.value.trim(); if(!text) return;
+  input.value=''; addMsg(text,'user'); setEnabled(false);
+
+  const mayBal=extractBalance(text);
+  if(mayBal!==null){ sessionBalance=mayBal; sessionBalanceDate=new Date(); updateDashboard(); }
+
+  const cfg=getConfig();
+  if(!cfg.apiKey){
+    removeTyping();
+    addMsg('NEURAL LINK OFFLINE — API key required.\n\nClick ⚙ in the header to configure your Anthropic API key.\nObtain one at: console.anthropic.com\n\nOnce connected, I can answer any financial question or general query in real time.','assistant');
+    setEnabled(true); return;
+  }
+
+  showTyping();
+  try {
+    let bubble=null;
+    const reply=await callClaude(text, part=>{
+      if(!bubble){ removeTyping(); bubble=addMsg(part,'assistant'); bubble.classList.add('streaming'); }
+      else { bubble.textContent=part; document.getElementById('chatMessages').scrollTop=99999; }
+    });
+    if(bubble) bubble.classList.remove('streaming');
+    if(!bubble){ removeTyping(); addMsg(reply||'(no response)','assistant'); }
+    conversationHistory.push({role:'user',content:text},{role:'assistant',content:reply});
+    if(conversationHistory.length>40) conversationHistory=conversationHistory.slice(-40);
+    updateDashboard();
+  } catch(err) {
+    removeTyping();
+    const msg=err.message==='NO_KEY'?'NEURAL LINK OFFLINE — Configure API key in ⚙ Settings.':
+              err.message==='BAD_KEY'?'AUTHENTICATION FAILURE — API key invalid or expired.':
+              `TRANSMISSION ERROR: ${err.message}`;
+    addMsg(msg,'assistant');
+  }
+  setEnabled(true);
+  document.getElementById('chatInput').focus();
+}
+
+function quick(q){ document.getElementById('chatInput').value=q; handleSend(); }
+
+/* ════════════════════════════════════════════════════════
+   INIT
+═════════════════════════════════════════════════════════*/
+document.addEventListener('DOMContentLoaded',()=>{
+  const today=ld(new Date());
+  const np=nextPaycheck(addDays(today,1));
+  const lp=prevPaycheck(today);
+  const dtn=daysBetween(today,np);
+
+  document.getElementById('headerDate').textContent=`${fmt(today).toUpperCase()}`;
+  const pt=document.getElementById('paycheckTag');
+  pt.textContent=`PAYCHECK IN ${dtn}D // ${fmtS(np).toUpperCase()}`;
+  pt.style.display='';
+
+  updateApiStatus();
+  renderBillsView();
+
+  const cfg=getConfig();
+  addMsg(
+    `SYSTEM BOOT — NEURAL FINANCE v2.0\n${'─'.repeat(42)}\nToday:             ${fmt(today)}\nLast paycheck:     ${fmt(lp)}\nNext paycheck:     ${fmt(np)}  [T-${dtn} days]\n${'─'.repeat(42)}\n${cfg.apiKey
+      ? 'Neural link active. Ready for queries.\n\nTell me your checking balance to unlock financial analysis.\n\nExamples:\n  "My checking has $1,400 — what\'s my surplus April 5?"\n  "I have $950. Can I spend $200 this weekend?"\n  "What bills are due before my next paycheck?"\n  "How much should I move to savings?"'
+      : 'NEURAL LINK OFFLINE\nClick ⚙ in the header to add your Anthropic API key.\nGet one free at console.anthropic.com'}`,
+    'assistant'
+  );
+
+  document.getElementById('chatInput').addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); handleSend(); }
+  });
+  document.getElementById('settingsOverlay').addEventListener('click',e=>{
+    if(e.target===document.getElementById('settingsOverlay')) closeSettings();
+  });
+});
+</script>
+</body>
+</html>

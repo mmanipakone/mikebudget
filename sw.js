@@ -1,4 +1,4 @@
-const CACHE = 'mikebudget-v4';
+const CACHE = 'mikebudget-v5';
 const ASSETS = ['./', './index.html', './manifest.json', './icon.svg',
   './neon-gaming-background.jpg', './illustration-rain-futuristic-city.jpg',
   './illustration-rain-futuristic-city-2.jpg',

@@ -1,0 +1,14 @@
+{
+  "name": "MikeBudget // Neural Finance",
+  "short_name": "MikeBudget",
+  "description": "AI-powered personal finance assistant",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#010208",
+  "theme_color": "#010208",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
